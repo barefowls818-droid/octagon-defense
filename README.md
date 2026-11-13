@@ -1,0 +1,52 @@
+# Octagon Defense website
+
+Static site for Octagon Defense (contract protection, Lubbock / Houston / DFW). Plain
+HTML/CSS/JS rendered by a small Python script, served by a Cloudflare Worker (static assets).
+Business facts and decisions live in `BRIEF.md`.
+
+## Layout
+
+| Path | What it is |
+| --- | --- |
+| `src/pages/` | One `.html` file per page with a front-matter block (title, description, crumb, schema) |
+| `src/data/site.json` | Business facts: owner, phone, email, areas, hiring pay |
+| `src/static/` | CSS, JS, fonts, images, favicons, `_headers` (copied as is) |
+| `build.py` | Renders `src/` into `public/` (stdlib only) |
+| `public/` | The built site. Committed, so Cloudflare needs no build step |
+| `tools/check.py` | Checks titles, descriptions, headings, links, images, JSON-LD |
+| `tools/make_images.js` | Renders the share card, schema logo and touch icon (Playwright) |
+| `tools/make_favicon.py` | Builds `favicon.ico` (Pillow) |
+| `branding/index.html` | The five brand directions (Corner Man was chosen) |
+
+## Everyday edits
+
+```sh
+python3 build.py && python3 tools/check.py
+```
+
+`check.py` lists links to planned pages that aren't built yet. Remove a page from
+`PENDING` in `tools/check.py` once it ships.
+
+Page tokens: `{{phone}}`, `{{tel}}`, `{{email}}`, `{{mailto}}`, `{{owner}}`, `{{pay}}`,
+`{{areas}}`, `{{mark}}`. Change a fact in `site.json` and it updates everywhere.
+
+## Status
+
+| Page | URL | Status |
+| --- | --- | --- |
+| Home | `/` | Built |
+| Need protection? | `/protection/` | Next |
+| Careers | `/careers/` | Planned |
+| About | `/about/` | Planned |
+| Contact | `/contact/` | Planned |
+
+## Deploy and launch
+
+Same as Vintage Lash Studio: `npx wrangler deploy` for a workers.dev preview (every page
+`noindex`), then for launch:
+
+```sh
+SITE_URL=https://thedomain.com INDEXABLE=1 python3 build.py
+```
+
+Then verify the domain in Search Console and submit `/sitemap.xml`.

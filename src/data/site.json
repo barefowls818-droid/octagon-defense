@@ -1,0 +1,16 @@
+{
+  "name": "Octagon Defense",
+  "descriptor": "Contract Protection",
+  "owner": "Brennan Thomasson",
+  "ownerTitle": "Owner and Operator",
+  "ownerSchool": "Texas Tech University",
+  "phone": "(936) 445-8822",
+  "phoneE164": "+19364458822",
+  "email": "brennanthomasson@gmail.com",
+  "areas": [
+    {"name": "Lubbock", "schema": "Lubbock, Texas", "note": "Home base. Most of our current work is in Lubbock."},
+    {"name": "Houston", "schema": "Houston, Texas", "note": "We take contracts in the Houston area."},
+    {"name": "Dallas–Fort Worth", "short": "DFW", "schema": "Dallas–Fort Worth, Texas", "note": "We take contracts across the Dallas–Fort Worth area."}
+  ],
+  "hiring": {"type": "Part-time", "pay": "$15–20/hr", "basis": "based on experience"}
+}
