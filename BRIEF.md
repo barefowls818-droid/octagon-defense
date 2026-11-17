@@ -15,7 +15,8 @@ priority; this brief and Noah's instructions win).
   or "officers" until Brennan supplies his license details. Texas regulates guard and
   protection companies (DPS Private Security Bureau, Occupations Code ch. 1702); once he
   has a license number, it likely needs to appear on the site.
-- **Pages:** Home, Need protection? (`/protection/`), Careers (`/careers/`), About
+- **Pages:** Home, Need protection? (`/hire-bouncers-lubbock/`, targets "hire bouncers
+  Lubbock", "bar/event bouncers Lubbock", "party security Lubbock"), Careers (`/careers/`), About
   (`/about/`), Contact (`/contact/`). That's the whole site.
 - **Stack/hosting:** same as Vintage Lash Studio: stdlib `build.py`, `public/` committed,
   Cloudflare Worker static assets, `noindex` until the domain is live.
@@ -54,8 +55,17 @@ These are written from the facts above but put words in his mouth:
 - Service examples: birthdays and private parties; door and floor coverage for venues;
   one-night or recurring contracts.
 - Hero slogan "Trained to fight. Paid not to."
+- `/hire-bouncers-lubbock/`: the bouncer duties list (incl. checking guest lists and IDs),
+  the "who hires us" list (incl. student and Greek events, formals), the three booking steps
+  (plan and quote; arriving before doors open and staying until the room is clear), and the
+  staffing table (a common rule of thumb: 1 per 100 guests, 1 per 50 with alcohol).
 
 ## Open questions
+
+- Formspree form for the request form (or another endpoint); goes in `site.json` → `formEndpoint`.
+- Before launch: the bouncer page markets contract bouncers. Texas regulates contract guard
+  services (Occupations Code ch. 1702), so the license question matters before this page
+  is indexed.
 
 - License number and status (see Licensing above).
 - Domain name; Google Business Profile (service-area business, no public address).

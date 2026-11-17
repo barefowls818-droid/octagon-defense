@@ -8,7 +8,7 @@ from pathlib import Path
 PUB = Path(__file__).resolve().parent.parent / "public"
 problems = []
 # Pages linked from the nav that are planned but not built yet. Remove each as it ships.
-PENDING = {"/protection/", "/careers/", "/about/", "/contact/"}
+PENDING = {"/careers/", "/about/", "/contact/"}
 pending_hits = set()
 
 

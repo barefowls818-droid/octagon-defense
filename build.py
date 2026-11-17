@@ -38,7 +38,7 @@ OWNER_ID = f"{SITE_URL}/about/#brennan"
 TODAY = date.today().isoformat()
 
 NAV = [
-    ("Need protection?", "/protection/"),
+    ("Need protection?", "/hire-bouncers-lubbock/"),
     ("Careers", "/careers/"),
     ("About", "/about/"),
     ("Contact", "/contact/"),
@@ -71,6 +71,52 @@ def areas_inline():
     return " · ".join(a.get("short", a["name"]) for a in SITE["areas"])
 
 
+EVENT_TYPES = ["Bar or nightclub", "Event venue", "House or private party", "Student or Greek event",
+               "Birthday or celebration", "Other"]
+CITIES = ["Lubbock", "Houston", "Dallas–Fort Worth", "Somewhere else in Texas"]
+
+
+def request_form():
+    """Event request form. Posts to SITE["formEndpoint"] (Formspree) when set; until then the
+    script opens a pre-filled email to Brennan instead, so the form is never a dead end."""
+    endpoint = SITE.get("formEndpoint", "")
+    opts = lambda xs: "".join(f'<option>{esc(x)}</option>' for x in xs)
+    return f"""<form class="rq" id="request-form" method="post" action="{esc(endpoint) or 'mailto:' + SITE['email']}" data-endpoint="{esc(endpoint)}" data-email="{SITE['email']}" novalidate>
+  <input type="hidden" name="_subject" value="Protection request from the website">
+  <p class="rq__hp" aria-hidden="true"><label for="rq-company">Leave this empty</label><input id="rq-company" name="_gotcha" tabindex="-1" autocomplete="off"></p>
+  <fieldset>
+    <legend>About you</legend>
+    <div class="rq__row">
+      <p class="field"><label for="rq-name">Your name</label><input id="rq-name" name="name" autocomplete="name" required></p>
+      <p class="field"><label for="rq-phone">Phone</label><input id="rq-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></p>
+    </div>
+    <p class="field"><label for="rq-email">Email <span class="opt">(optional)</span></label><input id="rq-email" name="email" type="email" autocomplete="email"></p>
+  </fieldset>
+  <fieldset>
+    <legend>About the event</legend>
+    <div class="rq__row">
+      <p class="field"><label for="rq-type">Type of event</label><select id="rq-type" name="event_type" required><option value="">Choose one</option>{opts(EVENT_TYPES)}</select></p>
+      <p class="field"><label for="rq-city">City</label><select id="rq-city" name="city" required>{opts(CITIES)}</select></p>
+    </div>
+    <div class="rq__row">
+      <p class="field"><label for="rq-date">Date</label><input id="rq-date" name="date" type="date" required></p>
+      <p class="field"><label for="rq-hours">Start and end time</label><input id="rq-hours" name="hours" placeholder="e.g. 9 pm to 2 am"></p>
+    </div>
+    <div class="rq__row">
+      <p class="field"><label for="rq-guests">Expected guests</label><input id="rq-guests" name="guests" inputmode="numeric" placeholder="e.g. 150"></p>
+      <p class="field"><label for="rq-alcohol">Alcohol served?</label><select id="rq-alcohol" name="alcohol"><option>Yes</option><option>No</option><option>Not sure yet</option></select></p>
+    </div>
+    <p class="field"><label for="rq-venue">Venue or address</label><input id="rq-venue" name="venue" autocomplete="street-address"></p>
+    <p class="field"><label for="rq-notes">Anything else we should know? <span class="opt">(optional)</span></label><textarea id="rq-notes" name="notes" rows="4" placeholder="Recurring nights, problems you've had before, where you want people posted"></textarea></p>
+  </fieldset>
+  <div class="rq__foot">
+    <button class="btn" type="submit">Send request</button>
+    <p class="rq__alt">Rather talk? Call <a href="tel:{SITE['phoneE164']}">{SITE['phone']}</a>.</p>
+  </div>
+  <p class="rq__status" role="status" aria-live="polite"></p>
+</form>"""
+
+
 TOKENS = {
     "phone": lambda: SITE["phone"],
     "tel": lambda: f'tel:{SITE["phoneE164"]}',
@@ -80,6 +126,7 @@ TOKENS = {
     "pay": lambda: SITE["hiring"]["pay"],
     "mark": lambda: MARK,
     "areas": areas_inline,
+    "request-form": request_form,
 }
 
 
@@ -131,6 +178,22 @@ def faq_node(body, url):
              "acceptedAnswer": {"@type": "Answer", "text": strip_tags(a)}}
             for q, a in qa
         ],
+    }
+
+
+def service_node(meta, url):
+    """Service page: name/type/area come from front matter (service_name, service_type, service_area)."""
+    areas = [a.strip() for a in meta.get("service_area", "").split("|") if a.strip()]
+    return {
+        "@type": "Service",
+        "@id": f"{url}#service",
+        "name": meta["service_name"],
+        "serviceType": meta["service_type"],
+        "description": meta["description"],
+        "provider": {"@id": ORG_ID},
+        "areaServed": [{"@type": "City", "name": a} for a in areas],
+        "url": url,
+        "potentialAction": {"@type": "CommunicateAction", "name": "Request protection", "target": f"{url}#request"},
     }
 
 
@@ -209,7 +272,7 @@ def footer():
   </div>
   <div class="wrap"><p class="footer__legal">© {year} Octagon Defense · Lubbock, Texas</p></div>
 </footer>
-<div class="callbar">{tel_link("Call", "btn btn--ghost")}<a class="btn" href="/protection/">Request protection</a></div>"""
+<div class="callbar">{tel_link("Call", "btn btn--ghost")}<a class="btn" href="/hire-bouncers-lubbock/#request">Request protection</a></div>"""
 
 
 def breadcrumbs_html(crumbs):
@@ -224,7 +287,10 @@ def page(meta, body, url, css, js, is_404=False):
     crumbs = []
     if meta.get("crumb"):
         crumbs = [("Home", "/"), (meta["crumb"], None)]
-        body = breadcrumbs_html(crumbs) + body
+        if "{{crumbs}}" in body:  # a page can place its breadcrumb inside its hero
+            body = body.replace("{{crumbs}}", breadcrumbs_html(crumbs).replace('class="crumbs wrap"', 'class="crumbs"'))
+        else:
+            body = breadcrumbs_html(crumbs) + body
     body = render_tokens(body)
 
     schema = [s.strip() for s in meta.get("schema", "").split(",") if s.strip()]
@@ -235,6 +301,8 @@ def page(meta, body, url, css, js, is_404=False):
                    "name": SITE["name"], "publisher": {"@id": ORG_ID}}]
     if "person" in schema and "home" not in schema:
         graph.append(person_node())
+    if "service" in schema:
+        graph.append(service_node(meta, canonical))
     if "faq" in schema:
         graph.append(faq_node(body, canonical))
     if crumbs:

@@ -27,6 +27,11 @@ python3 build.py && python3 tools/check.py
 `check.py` lists links to planned pages that aren't built yet. Remove a page from
 `PENDING` in `tools/check.py` once it ships.
 
+**Request form:** set `formEndpoint` in `src/data/site.json` to the Formspree URL
+(e.g. `https://formspree.io/f/xxxxxxx`) and rebuild. Until then, submitting opens a pre-filled
+email to Brennan. Send one real test after setting it; Formspree only starts delivering after
+the first submission is confirmed.
+
 Page tokens: `{{phone}}`, `{{tel}}`, `{{email}}`, `{{mailto}}`, `{{owner}}`, `{{pay}}`,
 `{{areas}}`, `{{mark}}`. Change a fact in `site.json` and it updates everywhere.
 
@@ -35,7 +40,7 @@ Page tokens: `{{phone}}`, `{{tel}}`, `{{email}}`, `{{mailto}}`, `{{owner}}`, `{{
 | Page | URL | Status |
 | --- | --- | --- |
 | Home | `/` | Built |
-| Need protection? | `/protection/` | Next |
+| Need protection? | `/hire-bouncers-lubbock/` | Built (form needs a Formspree endpoint) |
 | Careers | `/careers/` | Planned |
 | About | `/about/` | Planned |
 | Contact | `/contact/` | Planned |
