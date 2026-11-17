@@ -40,10 +40,17 @@ Page tokens: `{{phone}}`, `{{tel}}`, `{{email}}`, `{{mailto}}`, `{{owner}}`, `{{
 | Page | URL | Status |
 | --- | --- | --- |
 | Home | `/` | Built |
-| Need protection? | `/hire-bouncers-lubbock/` | Built (form needs a Formspree endpoint) |
-| Careers | `/careers/` | Planned |
-| About | `/about/` | Planned |
-| Contact | `/contact/` | Planned |
+| Need protection? | `/hire-bouncers-lubbock/` | Built |
+| Careers | `/careers/` | Built (JobPosting schema) |
+| About | `/about/` | Built |
+| Contact | `/contact/` | Built |
+
+All three forms (event request, job application, contact) share `formEndpoint`.
+
+**The job posting:** `/careers/` carries JobPosting markup for Google's job listings, built
+from `site.json` → `hiring`. When the role changes, update `pay`/`payMin`/`payMax` and set
+`posted` to the new date. When Brennan stops hiring, set `hiring.open` to `false` (removes the
+markup; also edit the page copy). Google penalises job markup for positions that are closed.
 
 ## Deploy and launch
 

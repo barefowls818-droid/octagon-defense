@@ -59,10 +59,15 @@ These are written from the facts above but put words in his mouth:
   the "who hires us" list (incl. student and Greek events, formals), the three booking steps
   (plan and quote; arriving before doors open and staying until the room is clear), and the
   staffing table (a common rule of thumb: 1 per 100 guests, 1 per 50 with alcohol).
+- `/careers/`: "Who we're looking for", "Why work here" (incl. shifts around school or another
+  job), the availability options on the application form, "Apply in two minutes".
+- `/about/`: "Why the octagon" (eight sides + the MMA cage) is our reading of the name; the
+  combat-sports paragraph and "Own the result" points.
+- Photo of Brennan for `/about/` (the profile card uses a "BT" octagon until then).
 
 ## Open questions
 
-- Formspree form for the request form (or another endpoint); goes in `site.json` → `formEndpoint`.
+- Formspree form for the three site forms (or another endpoint); goes in `site.json` → `formEndpoint`.
 - Before launch: the bouncer page markets contract bouncers. Texas regulates contract guard
   services (Occupations Code ch. 1702), so the license question matters before this page
   is indexed.

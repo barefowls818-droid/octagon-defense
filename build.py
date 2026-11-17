@@ -76,27 +76,47 @@ EVENT_TYPES = ["Bar or nightclub", "Event venue", "House or private party", "Stu
 CITIES = ["Lubbock", "Houston", "Dallas–Fort Worth", "Somewhere else in Texas"]
 
 
-def request_form():
-    """Event request form. Posts to SITE["formEndpoint"] (Formspree) when set; until then the
-    script opens a pre-filled email to Brennan instead, so the form is never a dead end."""
+def _opts(xs):
+    return "".join(f'<option>{esc(x)}</option>' for x in xs)
+
+
+def form_shell(form_id, subject, mail_subject, ok_msg, inner, submit_label):
+    """Every site form. Posts to SITE["formEndpoint"] (Formspree) when set; until then site.js opens
+    a pre-filled email to Brennan instead, so a form is never a dead end."""
     endpoint = SITE.get("formEndpoint", "")
-    opts = lambda xs: "".join(f'<option>{esc(x)}</option>' for x in xs)
-    return f"""<form class="rq" id="request-form" method="post" action="{esc(endpoint) or 'mailto:' + SITE['email']}" data-endpoint="{esc(endpoint)}" data-email="{SITE['email']}" novalidate>
-  <input type="hidden" name="_subject" value="Protection request from the website">
-  <p class="rq__hp" aria-hidden="true"><label for="rq-company">Leave this empty</label><input id="rq-company" name="_gotcha" tabindex="-1" autocomplete="off"></p>
-  <fieldset>
-    <legend>About you</legend>
-    <div class="rq__row">
-      <p class="field"><label for="rq-name">Your name</label><input id="rq-name" name="name" autocomplete="name" required></p>
-      <p class="field"><label for="rq-phone">Phone</label><input id="rq-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></p>
+    p = form_id.split("-")[0]
+    return f"""<form class="rq" id="{form_id}" method="post" action="{esc(endpoint) or 'mailto:' + SITE['email']}" data-endpoint="{esc(endpoint)}" data-email="{SITE['email']}" data-mail-subject="{esc(mail_subject)}" data-ok="{esc(ok_msg)}" novalidate>
+  <input type="hidden" name="_subject" value="{esc(subject)}">
+  <p class="rq__hp" aria-hidden="true"><label for="{p}-company">Leave this empty</label><input id="{p}-company" name="_gotcha" tabindex="-1" autocomplete="off"></p>
+  {inner}
+  <div class="rq__foot">
+    <button class="btn" type="submit">{esc(submit_label)}</button>
+    <p class="rq__alt">Rather talk? Call <a href="tel:{SITE['phoneE164']}">{SITE['phone']}</a>.</p>
+  </div>
+  <p class="rq__status" role="status" aria-live="polite"></p>
+</form>"""
+
+
+def you_fields(p, email_required=False):
+    req = " required" if email_required else ""
+    opt = "" if email_required else ' <span class="opt">(optional)</span>'
+    return f"""<div class="rq__row">
+      <p class="field"><label for="{p}-name">Your name</label><input id="{p}-name" name="name" autocomplete="name" required></p>
+      <p class="field"><label for="{p}-phone">Phone</label><input id="{p}-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></p>
     </div>
-    <p class="field"><label for="rq-email">Email <span class="opt">(optional)</span></label><input id="rq-email" name="email" type="email" autocomplete="email"></p>
+    <p class="field"><label for="{p}-email">Email{opt}</label><input id="{p}-email" name="email" type="email" autocomplete="email"{req}></p>"""
+
+
+def request_form():
+    inner = f"""<fieldset>
+    <legend>About you</legend>
+    {you_fields("rq")}
   </fieldset>
   <fieldset>
     <legend>About the event</legend>
     <div class="rq__row">
-      <p class="field"><label for="rq-type">Type of event</label><select id="rq-type" name="event_type" required><option value="">Choose one</option>{opts(EVENT_TYPES)}</select></p>
-      <p class="field"><label for="rq-city">City</label><select id="rq-city" name="city" required>{opts(CITIES)}</select></p>
+      <p class="field"><label for="rq-type">Type of event</label><select id="rq-type" name="event_type" required><option value="">Choose one</option>{_opts(EVENT_TYPES)}</select></p>
+      <p class="field"><label for="rq-city">City</label><select id="rq-city" name="city" required>{_opts(CITIES)}</select></p>
     </div>
     <div class="rq__row">
       <p class="field"><label for="rq-date">Date</label><input id="rq-date" name="date" type="date" required></p>
@@ -108,13 +128,47 @@ def request_form():
     </div>
     <p class="field"><label for="rq-venue">Venue or address</label><input id="rq-venue" name="venue" autocomplete="street-address"></p>
     <p class="field"><label for="rq-notes">Anything else we should know? <span class="opt">(optional)</span></label><textarea id="rq-notes" name="notes" rows="4" placeholder="Recurring nights, problems you've had before, where you want people posted"></textarea></p>
+  </fieldset>"""
+    return form_shell("request-form", "Protection request from the website", "Protection request",
+                      "Request sent. Brennan will get back to you soon.", inner, "Send request")
+
+
+def apply_form():
+    inner = f"""<fieldset>
+    <legend>About you</legend>
+    {you_fields("ap")}
   </fieldset>
-  <div class="rq__foot">
-    <button class="btn" type="submit">Send request</button>
-    <p class="rq__alt">Rather talk? Call <a href="tel:{SITE['phoneE164']}">{SITE['phone']}</a>.</p>
-  </div>
-  <p class="rq__status" role="status" aria-live="polite"></p>
-</form>"""
+  <fieldset>
+    <legend>Your experience</legend>
+    <p class="field"><label for="ap-exp">Door, event or protection experience</label><select id="ap-exp" name="experience" required><option value="">Choose one</option><option>None yet</option><option>Less than a year</option><option>One to three years</option><option>More than three years</option></select></p>
+    <p class="field"><label for="ap-background">Combat sports, wrestling or martial arts background <span class="opt">(optional)</span></label><input id="ap-background" name="background" placeholder="e.g. 4 years high school wrestling, amateur MMA"></p>
+    <div class="field"><p class="field__label" id="ap-avail-l">When can you work?</p>
+      <div class="checks" role="group" aria-labelledby="ap-avail-l">
+        <label><input type="checkbox" name="availability" value="Weeknights"> Weeknights</label>
+        <label><input type="checkbox" name="availability" value="Friday and Saturday nights"> Friday and Saturday nights</label>
+        <label><input type="checkbox" name="availability" value="Daytime weekends"> Daytime weekends</label>
+      </div>
+    </div>
+    <p class="field"><label for="ap-about">Tell us about yourself <span class="opt">(optional)</span></label><textarea id="ap-about" name="about" rows="4" placeholder="Jobs you've worked, why you want this one, anything we should know"></textarea></p>
+  </fieldset>"""
+    return form_shell("apply-form", "Job application from the website", "Job application",
+                      "Application sent. Brennan will reach out if it's a fit.", inner, "Send application")
+
+
+def contact_form():
+    inner = f"""<fieldset>
+    <legend>Send a message</legend>
+    {you_fields("ct")}
+    <p class="field"><label for="ct-topic">What's this about?</label><select id="ct-topic" name="topic" required><option value="">Choose one</option><option>Hiring bouncers or protection</option><option>Applying for a job</option><option>Something else</option></select></p>
+    <p class="field"><label for="ct-msg">Message</label><textarea id="ct-msg" name="message" rows="5" required></textarea></p>
+  </fieldset>"""
+    return form_shell("contact-form", "Message from the website", "Website message",
+                      "Message sent. Brennan will get back to you soon.", inner, "Send message")
+
+
+def fmt_date(iso):
+    d = date.fromisoformat(iso)
+    return f"{d.strftime('%B')} {d.day}, {d.year}"
 
 
 TOKENS = {
@@ -127,6 +181,10 @@ TOKENS = {
     "mark": lambda: MARK,
     "areas": areas_inline,
     "request-form": request_form,
+    "apply-form": apply_form,
+    "contact-form": contact_form,
+    "posted": lambda: fmt_date(SITE["hiring"]["posted"]),
+    "posted-iso": lambda: SITE["hiring"]["posted"],
 }
 
 
@@ -150,6 +208,8 @@ def business_node(description):
         "email": SITE["email"],
         "areaServed": [{"@type": "Place", "name": a["schema"]} for a in SITE["areas"]],
         "founder": {"@id": OWNER_ID},
+        "contactPoint": {"@type": "ContactPoint", "telephone": SITE["phoneE164"], "email": SITE["email"],
+                         "contactType": "customer service", "areaServed": "US-TX", "availableLanguage": "English"},
     }
 
 
@@ -161,6 +221,7 @@ def person_node():
         "jobTitle": SITE["ownerTitle"],
         "worksFor": {"@id": ORG_ID},
         "alumniOf": {"@type": "CollegeOrUniversity", "name": SITE["ownerSchool"]},
+        "url": f"{SITE_URL}/about/",
     }
 
 
@@ -194,6 +255,32 @@ def service_node(meta, url):
         "areaServed": [{"@type": "City", "name": a} for a in areas],
         "url": url,
         "potentialAction": {"@type": "CommunicateAction", "name": "Request protection", "target": f"{url}#request"},
+    }
+
+
+def job_node(body, url):
+    """JobPosting for Google's job listings. The description is the visible job section, marked
+    in the page with <!--job--> ... <!--/job-->. Only emitted while site.json hiring.open is true."""
+    h = SITE["hiring"]
+    m = re.search(r"<!--job-->(.*?)<!--/job-->", body, re.S)
+    desc = re.sub(r'\s(?:class|id|aria-[\w-]+|data-[\w-]+)="[^"]*"', "", m.group(1))
+    desc = re.sub(r"</?(?:div|section|article|span)[^>]*>", "", desc)
+    desc = re.sub(r"\s+", " ", desc).strip()
+    return {
+        "@type": "JobPosting",
+        "@id": f"{url}#job",
+        "title": h["title"],
+        "description": desc,
+        "datePosted": h["posted"],
+        "employmentType": "PART_TIME",
+        "hiringOrganization": {"@type": "Organization", "@id": ORG_ID, "name": SITE["name"],
+                               "sameAs": f"{SITE_URL}/", "logo": f"{SITE_URL}/img/octagon-defense-logo.png"},
+        "jobLocation": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": "Lubbock",
+                                                      "addressRegion": "TX", "addressCountry": "US"}},
+        "baseSalary": {"@type": "MonetaryAmount", "currency": "USD",
+                       "value": {"@type": "QuantitativeValue", "minValue": h["payMin"], "maxValue": h["payMax"],
+                                 "unitText": "HOUR"}},
+        "url": url,
     }
 
 
@@ -303,6 +390,14 @@ def page(meta, body, url, css, js, is_404=False):
         graph.append(person_node())
     if "service" in schema:
         graph.append(service_node(meta, canonical))
+    if "job" in schema and SITE["hiring"].get("open"):
+        graph.append(job_node(body, canonical))
+    if "about" in schema:
+        graph += [person_node(), {"@type": "AboutPage", "@id": f"{canonical}#page", "url": canonical,
+                                  "name": meta["title"], "about": {"@id": ORG_ID}, "mainEntity": {"@id": OWNER_ID}}]
+    if "contact" in schema:
+        graph.append({"@type": "ContactPage", "@id": f"{canonical}#page", "url": canonical,
+                      "name": meta["title"], "about": {"@id": ORG_ID}})
     if "faq" in schema:
         graph.append(faq_node(body, canonical))
     if crumbs:
